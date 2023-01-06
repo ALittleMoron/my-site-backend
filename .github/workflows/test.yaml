@@ -1,0 +1,59 @@
+name: test food service CI/CD pipeline
+
+on:
+  pull_request:
+    types:
+      - "opened"
+      - "edited"
+      - "reopened"
+      - "synchronize"
+  push:
+    branches:
+      - "*"
+  workflow_dispatch:
+
+jobs:
+  test:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout branch"
+        uses: actions/checkout@v3
+
+      - name: set env var of current branch name
+        run: |
+          GIT_BRANCH=${GITHUB_BASE_REF:-${GITHUB_REF#refs/heads/}}
+          echo "GIT_BRANCH=$GIT_BRANCH" >> $GITHUB_ENV
+          echo $GIT_BRANCH
+
+      - name: Create main env file
+        run: |
+          echo SERVER_HOST=${{secrets.SERVER_HOST}} >> .env.docker
+          echo DB_NAME=${{secrets.DB_NAME}} >> .env.docker
+          echo DB_HOST=${{secrets.DB_HOST}} >> .env.docker
+          echo DB_PORT=${{secrets.DB_PORT}} >> .env.docker
+          echo DB_USER=${{secrets.DB_USER}} >> .env.docker
+          echo DB_PASSWORD=${{secrets.DB_PASSWORD}} >> .env.docker
+          echo PGDATA=${{secrets.PGDATA}} >> .env.docker
+
+          echo DEBUG=1 >> .env.docker
+
+      - name: try to build from docker-compose
+        run: |
+          docker-compose -f docker-compose.prod.yaml build
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.10
+      - uses: Gr1N/setup-poetry@v8
+      - run: poetry --version
+      - name: check tests and code style
+        run: |
+          cd src_backend/
+          poetry install
+          flake8 --config ./.flake8 app tests
+          isort --settings-path ./pyproject.toml --recursive --check-only
+          docker-compose --env-file ./.env.test -f docker-compose.test.yaml -d --build
+          coverage run --rcfile ./pyproject.toml -m pytest ./tests
+          coverage report --fail-under 95

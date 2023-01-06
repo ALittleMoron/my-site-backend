@@ -1,0 +1,29 @@
+version: "3"
+
+services:
+  my-site-postgres-test:
+    container_name: my-site-postgres-test
+    image: postgres:15-alpine
+    healthcheck:
+      test: "pg_isready --username=${DB_USER} -d ${DB_NAME}"
+      timeout: 20s
+      interval: 2s
+      retries: 10
+    env_file:
+      - ".env.test"
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+      PGDATA: ${PGDATA}
+    volumes:
+      - ${PGDATA}
+    ports:
+      - "${DB_PORT}:5432"
+    networks:
+      - host
+
+networks:
+  host:
+    name: host
+    external: true
