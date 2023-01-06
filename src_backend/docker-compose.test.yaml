@@ -3,7 +3,6 @@ version: "3"
 services:
   my-site-postgres-test:
     container_name: my-site-postgres-test
-    network_mode: "host"
     image: postgres:15-alpine
     healthcheck:
       test: "pg_isready --username=${DB_USER} -d ${DB_NAME}"
