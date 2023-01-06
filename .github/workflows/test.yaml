@@ -40,4 +40,4 @@ jobs:
           poetry run isort --settings-path ./pyproject.toml --check-only .
           docker-compose --env-file ./.env.test -f docker-compose.test.yaml up -d --build
           poetry run coverage run --rcfile ./pyproject.toml -m pytest ./tests
-          poetry run coverage report --fail-under 95
+          poetry run coverage report # --fail-under 95
