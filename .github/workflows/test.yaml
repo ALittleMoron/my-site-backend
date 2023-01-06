@@ -36,8 +36,8 @@ jobs:
         run: |
           cd src_backend/
           poetry install
-          flake8 --config ./.flake8 app tests
-          isort --settings-path ./pyproject.toml --recursive --check-only
+          poetry run flake8 --config ./.flake8 app tests
+          poetry run isort --settings-path ./pyproject.toml --recursive --check-only
           docker-compose --env-file ./.env.test -f docker-compose.test.yaml -d --build
-          coverage run --rcfile ./pyproject.toml -m pytest ./tests
-          coverage report --fail-under 95
+          poetry run coverage run --rcfile ./pyproject.toml -m pytest ./tests
+          poetry run coverage report --fail-under 95
