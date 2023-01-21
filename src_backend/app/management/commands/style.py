@@ -15,7 +15,7 @@ class CheckStyles(AbstractBaseCommand):
         tests_return_status = subprocess.run(('flake8', 'tests'))
         if app_return_status.returncode | tests_return_status.returncode:
             sys.exit(1)
-        print('\n -----------------\nВсе тесты успешно пройдены')  # noqa: T201
+        print('\n-----------------\nВсе проверки стилей успешно пройдены')  # noqa: T201
         sys.exit(0)
 
 

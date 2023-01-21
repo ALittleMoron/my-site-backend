@@ -16,13 +16,14 @@ if not (_dir := (PROJECT_ROOT_DIR / LOGGER_FOLDER)).exists():
 class LogLevels(int, Enum):
     """Log levels from logging module as enum class."""
 
-    TRACE = 5
     DEBUG = 10
     INFO = 20
-    SUCCESS = 25
-    WARNING = 30
     ERROR = 40
-    CRITICAL = 50
+
+
+for log_dir_element in (PROJECT_ROOT_DIR / LOGGER_FOLDER).iterdir():
+    if log_dir_element.is_file() and log_dir_element.stat().st_size == 0:
+        log_dir_element.unlink(missing_ok=True)
 
 
 for log_level in LogLevels:
@@ -32,9 +33,8 @@ for log_level in LogLevels:
                 template := (
                     PROJECT_ROOT_DIR
                     / LOGGER_FOLDER
-                    / log_level.name.lower()
                     / LOGGER_FILE_TEMPLATE.format(
-                        log_level=log_level,
+                        log_level=log_level.name.upper(),
                         unique="{time}",
                     )
                 )

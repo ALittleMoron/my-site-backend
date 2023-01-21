@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 
 import uvicorn
 
@@ -15,17 +16,26 @@ class Runserver(AbstractBaseCommand):
         *,  # noqa
         host: str = "localhost",
         port: int = 8000,
-        workers: int = 4,
+        workers: Optional[int] = 4,
+        mode: str = 'dev',
     ):
         """Команда запуска локального тестового сервера."""
-        if not host or not port or not workers:
+        if not host or not port or not workers or not mode or mode not in {'dev', 'prod'}:
             raise IncorrectParametersError
-        os.environ['PROJECT_RUN_MODE'] = 'dev'
+        if mode == 'dev':
+            workers = None
+            reload = True
+            delay = 1
+        else:
+            reload = False
+            delay = 0.25
+        os.environ['PROJECT_RUN_MODE'] = mode
         uvicorn.run(  # type: ignore
             'app.main:get_application',
             host=host,
             port=port,
-            reload=True,
+            reload=reload,
+            reload_delay=delay,
             workers=workers,
             factory=True,
         )
