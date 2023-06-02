@@ -34,10 +34,6 @@ jobs:
       - run: poetry --version
       - name: check tests and code style
         run: |
-          cd src_backend/
-          poetry install
-          poetry run flake8 --config ./.flake8 app tests
-          poetry run isort --settings-path ./pyproject.toml --check-only .
-          docker-compose --env-file ./.env.test -f docker-compose.test.yaml up -d --build
-          poetry run coverage run --rcfile ./pyproject.toml -m pytest ./tests
-          poetry run coverage report # --fail-under 95
+          make install
+          make lint
+          make test
