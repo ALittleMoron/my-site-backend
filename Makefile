@@ -58,7 +58,7 @@ lint:
 	$(POETRY) run isort --settings-path ./pyproject.toml --check-only $(NAME)
 	$(POETRY) run black --config ./pyproject.toml --check $(NAME) --diff
 	$(POETRY) run ruff check $(NAME)
-	$(POETRY) run run vulture $(NAME) --min-confidence 100
+	$(POETRY) run vulture $(NAME) --min-confidence 100
 	$(POETRY) run bandit --configfile ./pyproject.toml -r ./$(NAME)/app
 
 .PHONY: format
