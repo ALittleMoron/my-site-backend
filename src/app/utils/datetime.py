@@ -7,7 +7,8 @@ import zoneinfo
 def get_utc_now() -> datetime.datetime:
     """возвращает текущее UTC время.
 
-    Returns:
+    Returns
+    -------
         datetime: текущая дата и время во временной зоне UTC.
     """
     return datetime.datetime.now(zoneinfo.ZoneInfo('UTC'))

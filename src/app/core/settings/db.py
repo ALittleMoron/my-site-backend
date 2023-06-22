@@ -18,10 +18,11 @@ class DatabaseSettings(ProjectBaseSettings):
     type_: str = Field(default='postgresql', description='база данных')
 
     @property
-    def db_url(self) -> str:
+    def db_url(self: 'DatabaseSettings') -> str:
         """Свойство db_url, возвращающее ссылку на базу данных.
 
-        Returns:
+        Returns
+        -------
             str: ссылка на базу данных.
         """
         return DB_URL_TEMPLATE.format(
@@ -38,6 +39,3 @@ class DatabaseSettings(ProjectBaseSettings):
         """config class for production settings."""
 
         env_prefix = "DB_"
-
-
-database_settings = DatabaseSettings()

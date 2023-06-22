@@ -1,6 +1,5 @@
 """Модуль базовых enum'ов моделей проекта."""
 import enum
-from typing import Optional
 
 from dateutil.relativedelta import relativedelta
 
@@ -24,13 +23,13 @@ class StrTimedeltaEnum(str, enum.Enum):
     ```
     В данном случае мы имеем класс с установленными дельтами времени. Примеры использования:
 
-    >>> ReminderRepeatTypeEnum.WEEKLY.name  # noqa: F821
+    >>> ReminderRepeatTypeEnum.WEEKLY.name
     'WEEKLY'
 
-    >>> ReminderRepeatTypeEnum.WEEKLY.value  # noqa: F821
+    >>> ReminderRepeatTypeEnum.WEEKLY.value
     'weekly'
 
-    >>> ReminderRepeatTypeEnum.WEEKLY.timedelta  # noqa: F821
+    >>> ReminderRepeatTypeEnum.WEEKLY.timedelta
     relativedelta(days=+7)
 
     """
@@ -38,18 +37,23 @@ class StrTimedeltaEnum(str, enum.Enum):
     timedelta: relativedelta
 
     def __new__(
-        cls,
+        cls: 'type[StrTimedeltaEnum]',
         title: str,
-        timedelta: Optional[relativedelta] = None,
+        timedelta: relativedelta | None = None,
     ) -> 'StrTimedeltaEnum':
         """Переопределенный метод __new__ для реализации хранения дельты времени.
 
-        Args:
-            title (str): первый аргумент строкового enum'а по умолчанию.
-            timedelta (relativedelta): экземпляр класса relativedelta.
+        Parameters
+        ----------
+        title
+            первый аргумент строкового enum'а по умолчанию.
+        timedelta
+            экземпляр класса relativedelta.
 
-        Returns:
-            StrTimedeltaEnum: экземпляр класса StrTimedeltaEnum.
+        Returns
+        -------
+        StrTimedeltaEnum
+            экземпляр класса StrTimedeltaEnum.
         """
         obj = str.__new__(cls, title)
         obj._value_ = title

@@ -5,21 +5,28 @@
 этого модуля.
 """
 import os
-from typing import Optional
 
 
 def getenv_list(key: str, default: str = '', separator: str = ',') -> list[str]:
     """Функция, преобразующая переменную окружения в список.
 
-    Args:
-        key (str): имя переменной, которую нужно достать из окружения.
-        default (str): значение по умолчанию. Default to ''.
-        separator (str): разделитель для парсинга значений списка. Defaults to ','.
+    Parameters
+    ----------
+    key
+        имя переменной, которую нужно достать из окружения.
+    default
+        значение по умолчанию. Default to ''.
+    separator
+        разделитель для парсинга значений списка. Defaults to ','.
 
-    Returns:
-        list[str]: итоговый список, полученный из переменных окружения.
+    Returns
+    -------
+    list of str
+        итоговый список, полученный из переменных окружения.
     """
     value = os.getenv(key, default)
+    if separator not in value and not value.isalnum():
+        return []
     result_list = [x.strip() for x in value.strip().split(separator)]
     return list(filter(lambda x: x, result_list))
 
@@ -27,27 +34,38 @@ def getenv_list(key: str, default: str = '', separator: str = ',') -> list[str]:
 def getenv_bool(key: str, default: str = '') -> bool:  # noqa: FNE005
     """Функция, преобразующая переменную окружения в булево значение.
 
-    Args:
-        key (str): имя переменной, которую нужно достать из окружения.
-        default (str): значение по умолчанию. Default to ''.
+    Parameters
+    ----------
+    key
+        имя переменной, которую нужно достать из окружения.
+    default
+        значение по умолчанию. Default to ''.
 
-    Returns:
-        bool: итоговое булево значение, полученное из переменных окружения.
+    Returns
+    -------
+    bool
+        итоговое булево значение, полученное из переменных окружения.
     """
     return os.getenv(key, default).lower() in ('1', 'true', 'yes')
 
 
-def getenv_int(key: str, default: Optional[int] = None) -> Optional[int]:
+def getenv_int(key: str, default: int | None = None) -> int | None:
     """Функция, преобразующая переменную окружения в целочисленное значение.
 
-    Args:
-        key (str): имя переменной, которую нужно достать из окружения.
-        default (str, optional): значение по умолчанию. Default to None.
+    Parameters
+    ----------
+    key
+        имя переменной, которую нужно достать из окружения.
+    default
+        значение по умолчанию. Default to None.
 
-    Returns:
-        int, optional: итоговое число, полученное из переменных окружения.
+    Returns
+    -------
+    int, optional
+        итоговое число, полученное из переменных окружения.
     """
     value = os.getenv(key, '')
-    if value.isdigit():
-        return int(value)
-    return default
+    try:
+        return int(float(value))
+    except ValueError:
+        return default

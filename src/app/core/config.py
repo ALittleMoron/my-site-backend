@@ -16,8 +16,10 @@ from app.core.settings.logger import logger  # noqa  # type: ignore
 def get_path_settings() -> PathSettings:
     """Функция достает настройки путей проекта.
 
-    Returns:
-        PathSettings: настройки путей.
+    Returns
+    -------
+    PathSettings
+        настройки путей.
     """
     return PathSettings()
 
@@ -26,8 +28,10 @@ def get_path_settings() -> PathSettings:
 def get_application_settings() -> AppSettings:
     """Функция достает настройки приложения для запуска.
 
-    Returns:
-        AppSettings: настройки приложения.
+    Returns
+    -------
+    AppSettings
+        настройки приложения.
     """
     return AppSettings()
 
@@ -36,7 +40,9 @@ def get_application_settings() -> AppSettings:
 def get_database_settings() -> DatabaseSettings:
     """Функция достает настройки базы данных.
 
-    Returns:
-        DatabaseSettings: настройки базы данных.
+    Returns
+    -------
+    DatabaseSettings
+        настройки базы данных.
     """
     return DatabaseSettings()

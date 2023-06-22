@@ -1,15 +1,13 @@
 """Модуль исключения моделей проекта."""
-from typing import Any, Optional
-
 from . import content
 
 
 class ModelAttributeError(AttributeError):
     """Ошибка атрибута модели."""
 
-    template: Optional[str] = None  # TODO: переделать под Template
+    template: str | None = None  # TODO: переделать под Template
 
-    def __init__(self, **kwargs: Any) -> None:  # noqa: D107
+    def __init__(self: 'ModelAttributeError', **kwargs: object) -> None:  # noqa: D107
         if not self.template:
             raise NotImplementedError(content.TEMPLATE_NOT_IMPLEMENTED)
         message = self.template.format(**kwargs)

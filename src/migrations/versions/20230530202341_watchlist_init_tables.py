@@ -11,7 +11,6 @@ from sqlalchemy.dialects import postgresql as pg
 
 from app.core.models.types import datetime as dt_custom_types
 
-# revision identifiers, used by Alembic.
 revision = '395a400af31a'
 down_revision = None
 branch_labels = None

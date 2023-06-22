@@ -51,11 +51,13 @@ class AppSettings(ProjectBaseSettings):
     )
 
     @property
-    def fastapi_kwargs(self) -> FastAPIKwargs:
+    def fastapi_kwargs(self: 'AppSettings') -> FastAPIKwargs:
         """Свойство, возвращающее настройки для FastAPI в виде словаря.
 
-        Returns:
-            FastAPIKwargs: словарь настроек.
+        Returns
+        -------
+        FastAPIKwargs
+            словарь настроек.
         """
         return {
             'debug': self.debug,
