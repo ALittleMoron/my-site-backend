@@ -66,23 +66,23 @@ exclude = '''
 '''
 
 
-                [tool.isort]
+[tool.isort]
 profile = "black"
 line_length = 100
 multi_line_output = 3
 
 
-                [tool.coverage]
-    [tool.coverage.run]
-    source = ["app"]
-    branch = true
-    omit = ['']
+[tool.coverage]
+[tool.coverage.run]
+source = ["app"]
+branch = true
+omit = ['']
 
-    [tool.coverage.report]
-    exclude_lines = [
-        "# noqa",
-        "raise NotImplementedError"
-    ]
+[tool.coverage.report]
+exclude_lines = [
+    "# noqa",
+    "raise NotImplementedError"
+]
 
 [tool.pytest]
 testpath = "tests"
