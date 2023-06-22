@@ -39,15 +39,15 @@ ignore = [
     [tool.ruff.mccabe]
     max-complexity = 11
 
-    [tool.ruff.flake8-bugbear]
+        [tool.ruff.flake8-bugbear]
     extend-immutable-calls = ["fastapi.Depends", "fastapi.Query"]
 
-    [tool.ruff.extend-per-file-ignores]
+            [tool.ruff.extend-per-file-ignores]
     "__init__.py" = ["F401"]
     "*/migrations/versions/*" = ["D103"]
 
 
-[tool.black]
+    [tool.black]
 line-length = 100
 skip-string-normalization = true
 include = '\.pyi?$'
@@ -66,13 +66,13 @@ exclude = '''
 '''
 
 
-[tool.isort]
+    [tool.isort]
 profile = "black"
 line_length = 100
 multi_line_output = 3
 
 
-[tool.coverage]
+    [tool.coverage]
     [tool.coverage.run]
     source = ["app"]
     branch = true
@@ -84,18 +84,18 @@ multi_line_output = 3
         "raise NotImplementedError"
     ]
 
-[tool.pytest]
+    [tool.pytest]
 testpath = "tests"
 
 
-[tool.bandit]
+    [tool.bandit]
 exclude = ['tests']
 
     [tool.bandit.assert_used]
     skips = ['*_test.py', '*/test_*.py']
 
 
-[tool.poetry]
+    [tool.poetry]
 name = "my-site"
 version = "0.1.0"
 description = ""
@@ -123,6 +123,7 @@ pytest-cov = "^4.1.0"
 freezegun = "^1.2.2"
 mimesis = "^10.1.0"
 vulture = "^2.7"
+isort = "^5.12.0"
 
 
 [tool.poetry.group.local-tools.dependencies]

@@ -34,6 +34,6 @@ jobs:
       - run: poetry --version
       - name: check tests and code style
         run: |
-          make install
+          make install_all
           make lint
           make test
