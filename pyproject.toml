@@ -26,28 +26,28 @@ ignore = [
     "PT016",
 ]
 
-    [tool.ruff.pydocstyle]
-    convention = "numpy"
-    ignore-decorators = ["typing.overload"]
+[tool.ruff.pydocstyle]
+convention = "numpy"
+ignore-decorators = ["typing.overload"]
 
-    [tools.ruff.isort]
-    include_trailing_comma = true
-    use_parentheses = true
-    multi_line_output = 3
-    line_length = 100
+[tools.ruff.isort]
+include_trailing_comma = true
+use_parentheses = true
+multi_line_output = 3
+line_length = 100
 
-    [tool.ruff.mccabe]
-    max-complexity = 11
+[tool.ruff.mccabe]
+max-complexity = 11
 
-                    [tool.ruff.flake8-bugbear]
-    extend-immutable-calls = ["fastapi.Depends", "fastapi.Query"]
+[tool.ruff.flake8-bugbear]
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query"]
 
-                                    [tool.ruff.extend-per-file-ignores]
-    "__init__.py" = ["F401"]
-    "*/migrations/versions/*" = ["D103"]
+[tool.ruff.extend-per-file-ignores]
+"__init__.py" = ["F401"]
+"*/migrations/versions/*" = ["D103"]
 
 
-                [tool.black]
+[tool.black]
 line-length = 100
 skip-string-normalization = true
 include = '\.pyi?$'
@@ -84,18 +84,18 @@ multi_line_output = 3
         "raise NotImplementedError"
     ]
 
-                [tool.pytest]
+[tool.pytest]
 testpath = "tests"
 
 
-                [tool.bandit]
+[tool.bandit]
 exclude = ['tests']
 
-    [tool.bandit.assert_used]
-    skips = ['*_test.py', '*/test_*.py']
+[tool.bandit.assert_used]
+skips = ['*_test.py', '*/test_*.py']
 
 
-                [tool.poetry]
+[tool.poetry]
 name = "my-site"
 version = "0.1.0"
 description = ""
