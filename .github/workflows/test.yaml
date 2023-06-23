@@ -26,13 +26,13 @@ jobs:
           echo "GIT_BRANCH=$GIT_BRANCH" >> $GITHUB_ENV
           echo $GIT_BRANCH
 
+      - uses: Gr1N/setup-poetry@v8
+      - run: poetry --version
       - name: Set up Python 3.11
         uses: actions/setup-python@v4
         with:
           python-version: "3.11.3"
           cache: "poetry"
-      - uses: Gr1N/setup-poetry@v8
-      - run: poetry --version
       - name: check tests and code style
         run: |
           make install_all
