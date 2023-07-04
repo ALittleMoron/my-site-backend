@@ -19,7 +19,9 @@ def sizeof_fmt(num: int | float, *, suffix: str = "b", force_float: bool = False
     for unit in SIZEOF_UNIT:
         if abs(num) < 1024.0:
             if force_float or int(num) != num:
-                return f"{num:3.1f}{unit}{suffix}"
+                return f"{num:.1f}{unit}{suffix}"
             return f"{int(num)}{unit}{suffix}"
         num /= 1024.0
-    return f"{num:.1f}Y{suffix}"
+    if force_float or int(num) != num:
+        return f"{num:.1f}Y{suffix}"
+    return f"{int(num)}Y{suffix}"

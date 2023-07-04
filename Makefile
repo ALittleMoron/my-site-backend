@@ -3,7 +3,7 @@ POETRY := $(shell command -v poetry 2> /dev/null)
 
 .DEFAULT_GOAL := help
 mode ?= "dev"
-message ?= "default message"
+message ?= default message
 ENV_VARS_PREFIX := PROJECT_RUN_MODE=$(mode)
 
 .PHONY: help
@@ -29,6 +29,7 @@ help:
 
 .PHONY: run
 run:
+	@if [ -z $(POETRY) ]; then echo "Poetry could not be found. See https://python-poetry.org/docs/"; exit 2; fi
 	$(ENV_VARS_PREFIX) $(POETRY) run uvicorn --factory src.app.main:get_application --reload --reload-delay 1
 
 .PHONY: install
@@ -44,17 +45,26 @@ install_all:
 
 .PHONY: shell
 shell:
-	$(POETRY) run ipython --no-confirm-exit --no-banner --quick \
+	@if [ -z $(POETRY) ]; then echo "Poetry could not be found. See https://python-poetry.org/docs/"; exit 2; fi
+	$(ENV_VARS_PREFIX) $(POETRY) run ipython --no-confirm-exit --no-banner --quick \
 	--InteractiveShellApp.extensions="autoreload" \
 	--InteractiveShellApp.exec_lines="%autoreload 2" \
+	--InteractiveShellApp.exec_lines="import sys, pathlib, os" \
+	--InteractiveShellApp.exec_lines="sys.path.insert(0, (pathlib.Path(os.getcwd()) / 'src').as_posix())" \
+	--InteractiveShellApp.exec_lines="from app.core.models import tables" \
+	--InteractiveShellApp.exec_lines="from app.api.v1.dependencies.databases import get_session" \
+	--InteractiveShellApp.exec_files="scripts/ipython_shell_enter_message.py"
 
 .PHONY: clean
 clean:
+	# --InteractiveShellApp.exec_lines="print('Данная оболочка была запущена с пре-импортированными модулями таблицы (tables) и функцией сессии (get_session). Также в оболочке используется плагин автообновления, так что при изменении кода в проекте не нужно перезапускать оболочку.')"
 	find . -type d -name "__pycache__" | xargs rm -rf {};
 	rm -rf ./logs/*
 
 .PHONY: lint
 lint:
+	@if [ -z $(POETRY) ]; then echo "Poetry could not be found. See https://python-poetry.org/docs/"; exit 2; fi
+	$(POETRY) run mypy --config-file ./pyproject.toml $(NAME)
 	$(POETRY) run isort --settings-path ./pyproject.toml --check-only $(NAME)
 	$(POETRY) run black --config ./pyproject.toml --check $(NAME) --diff
 	$(POETRY) run ruff check $(NAME)
@@ -63,33 +73,41 @@ lint:
 
 .PHONY: format
 format:
+	@if [ -z $(POETRY) ]; then echo "Poetry could not be found. See https://python-poetry.org/docs/"; exit 2; fi
 	$(POETRY) run isort --settings-path ./pyproject.toml $(NAME)
 	$(POETRY) run black --config ./pyproject.toml $(NAME)
 
 .PHONY: test
 test:
+	@if [ -z $(POETRY) ]; then echo "Poetry could not be found. See https://python-poetry.org/docs/"; exit 2; fi
 	$(ENV_VARS_PREFIX) $(POETRY) run pytest ./$(NAME)/tests --cov-report xml --cov-fail-under 60 --cov ./$(NAME)/app
 
 .PHONY: revision
 revision:
+	@if [ -z $(POETRY) ]; then echo "Poetry could not be found. See https://python-poetry.org/docs/"; exit 2; fi
 	$(ENV_VARS_PREFIX) $(POETRY) run alembic -c $(NAME)/alembic.ini revision -m "$(message)"
 
 .PHONY: auto_revision
 auto_revision:
+	@if [ -z $(POETRY) ]; then echo "Poetry could not be found. See https://python-poetry.org/docs/"; exit 2; fi
 	$(ENV_VARS_PREFIX) $(RUN_PREFIX) $(POETRY) run alembic -c $(NAME)/alembic.ini revision --autogenerate -m "$(message)"
 
 .PHONY: upgrade
 upgrade:
+	@if [ -z $(POETRY) ]; then echo "Poetry could not be found. See https://python-poetry.org/docs/"; exit 2; fi
 	$(ENV_VARS_PREFIX) $(POETRY) run alembic -c $(NAME)/alembic.ini upgrade +1
 
 .PHONY: upgrade_head
 upgrade_head:
+	@if [ -z $(POETRY) ]; then echo "Poetry could not be found. See https://python-poetry.org/docs/"; exit 2; fi
 	$(ENV_VARS_PREFIX) $(POETRY) run alembic -c $(NAME)/alembic.ini upgrade head
 
 .PHONY: downgrade
 downgrade:
+	@if [ -z $(POETRY) ]; then echo "Poetry could not be found. See https://python-poetry.org/docs/"; exit 2; fi
 	$(ENV_VARS_PREFIX) $(POETRY) run alembic -c $(NAME)/alembic.ini downgrade -1
 
 .PHONY: downgrade_base
 downgrade_base:
+	@if [ -z $(POETRY) ]; then echo "Poetry could not be found. See https://python-poetry.org/docs/"; exit 2; fi
 	$(ENV_VARS_PREFIX) $(POETRY) run alembic -c $(NAME)/alembic.ini downgrade base

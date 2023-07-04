@@ -1,14 +1,10 @@
 """Модуль базовых таблиц моделей данных проекта."""
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from pydantic import BaseModel
-from sqlalchemy import BigInteger
-from sqlalchemy.orm import DeclarativeBase, mapped_column
+from sqlalchemy.orm import DeclarativeBase
 
 from app.core.config import logger
-
-if TYPE_CHECKING:
-    from sqlalchemy.orm import Mapped
 
 ATTR_NOT_FOUND_TEMPLATE = 'Атрибут "{field}" не был найден в модели {class_name}.'
 
@@ -18,16 +14,9 @@ class Base(DeclarativeBase):
 
     __abstract__ = True
 
+    repr_include_fields: set[str] | tuple[str] | list[str] | None = None
     default_include_fields: tuple[str] | None = None
     default_replace_fields: dict[str, str] | None = None
-
-    id: 'Mapped[int]' = mapped_column(  # noqa: A003
-        BigInteger,
-        nullable=False,
-        unique=True,
-        primary_key=True,
-        autoincrement=True,
-    )
 
     def _get_model_attr(self: 'Base', field: str) -> Any:  # noqa: ANN401
         """Достает атрибут модели по его имени.
@@ -267,3 +256,28 @@ class Base(DeclarativeBase):
             f'Ожидались: Dict, BaseModel, Base. Пришёл: {type(item)}.'
         )
         raise TypeError(msg)
+
+    def __repr__(self: 'Base') -> str:
+        """Строковая репрезентация экземпляра класса модели.
+
+        Выводит всё наполнение модели, но только для колонок модели. Игнорирует гибридные и обычные
+        свойства. Выводит только то, что реально хранится в базе данных (с поправкой на '
+        'конвертацию данных в типы данных Python).
+        """
+        class_name = self.__class__.__name__
+        id_column: str | None = None
+        has_id_column = False
+        # (1) для того, чтобы id был всегда первым в итоговом repr, его сначала извлекаем...
+        if 'id' in self.__table__.columns:
+            has_id_column = True
+            id_column = self.__table__.columns['id'].name
+        # (2) ..., затем добавляем в values_pairs_list как первое значение ...
+        values_pairs_list: list[str] = [id_column] if id_column is not None else []
+        for col in self.__table__.columns:
+            # (3) ...и в итоге проверяем, чтобы id снова не был добавлен в итоговый список.
+            if (not has_id_column or col.name != 'id') and (
+                not self.repr_include_fields or col.name in self.repr_include_fields
+            ):
+                values_pairs_list.append(f'{col.name}={repr(getattr(self, col.name))}')
+        values_pairs = ', '.join(values_pairs_list)
+        return f'{class_name}({values_pairs})'

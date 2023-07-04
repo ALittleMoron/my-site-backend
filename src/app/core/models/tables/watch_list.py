@@ -1,22 +1,18 @@
 """Модуль таблиц списка просмотренного/прочитанного/наигранного."""
-from typing import TYPE_CHECKING
-
 from sqlalchemy import CheckConstraint, Enum, Integer, SmallInteger, String
-from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.models.enums import watch_list as watch_list_enums
+from app.core.models.mixins.ids import UUIDMixin
 from app.core.models.mixins.time import TimeMixin
 from app.core.models.tables.base import Base
 
-if TYPE_CHECKING:
-    from sqlalchemy.orm import Mapped
-
-KIND_NOT_SET_MESSAGE = 'Сделайте атрибут "kind" полем модели (CharField).'
+KIND_NOT_SET_MESSAGE = 'Сделайте атрибут "kind" полем модели (Enum).'
 WATCH_LIST_ELEMENT_NAME_LENGTH = 255
 WATCH_LIST_ELEMENT_NATIVE_NAME_LENGTH = 255
 
 
-class WatchListElementBase(TimeMixin, Base):
+class WatchListElementBase(Base, TimeMixin, UUIDMixin):
     """Базовый класс элемента списка просмотренного."""
 
     __abstract__ = True
@@ -27,39 +23,39 @@ class WatchListElementBase(TimeMixin, Base):
 
     kind = None  # Установить в качестве ENUM.
 
-    name: 'Mapped[str]' = mapped_column(
+    name: Mapped[str] = mapped_column(
         String(WATCH_LIST_ELEMENT_NAME_LENGTH),
         nullable=False,
         doc='Название',
     )
-    native_name: 'Mapped[str]' = mapped_column(
+    native_name: Mapped[str] = mapped_column(
         String(WATCH_LIST_ELEMENT_NAME_LENGTH),
         nullable=False,
         doc='Название на языке оригинала',
     )
-    description: 'Mapped[str]' = mapped_column(
+    description: Mapped[str] = mapped_column(
         String,
         nullable=True,
         doc='Описание',
     )
-    my_opinion: 'Mapped[str]' = mapped_column(
+    my_opinion: Mapped[str] = mapped_column(
         String,
         nullable=True,
         doc='Моё мнение',
     )
-    score: 'Mapped[int]' = mapped_column(
+    score: Mapped[int] = mapped_column(
         SmallInteger,
         nullable=True,
         doc='Оценка',
     )
-    repeat_view_count: 'Mapped[int]' = mapped_column(
+    repeat_view_count: Mapped[int] = mapped_column(
         Integer,
         nullable=False,
         default=0,
         server_default='0',
         doc='Количество повторных просмотров/прочтений',
     )
-    status: 'Mapped[watch_list_enums.StatusEnum]' = mapped_column(
+    status: Mapped[watch_list_enums.StatusEnum] = mapped_column(
         Enum(watch_list_enums.StatusEnum),
         nullable=False,
         default=watch_list_enums.StatusEnum.SCHEDULED,
@@ -78,7 +74,7 @@ class Anime(WatchListElementBase):
 
     __tablename__ = 'anime'
 
-    kind: 'Mapped[watch_list_enums.AnimeKindEnum]' = mapped_column(
+    kind: Mapped[watch_list_enums.AnimeKindEnum] = mapped_column(
         Enum(watch_list_enums.AnimeKindEnum),
         nullable=False,
         default=watch_list_enums.AnimeKindEnum.NOT_SET,
@@ -92,7 +88,7 @@ class Kinopoisk(WatchListElementBase):
 
     __tablename__ = 'kinopoisk'
 
-    kind: 'Mapped[watch_list_enums.KinopoiskKindEnum]' = mapped_column(
+    kind: Mapped[watch_list_enums.KinopoiskKindEnum] = mapped_column(
         Enum(watch_list_enums.KinopoiskKindEnum),
         nullable=False,
         default=watch_list_enums.KinopoiskKindEnum.NOT_SET,

@@ -13,6 +13,7 @@ TESTING_MODE = env_utils.getenv_bool('TESTING_MODE', 'true')
 project_run_mode = os.environ.get('PROJECT_RUN_MODE')
 env_file_base_name = os.environ.get('ENV_FILE_BASE_NAME', '.env')
 env_file_name = f'{env_file_base_name}.{project_run_mode}'
+env_file_dir = PROJECT_ROOT_DIR / 'dotenv'
 
 
 def test_base_vars() -> None:
@@ -24,6 +25,7 @@ def test_base_vars() -> None:
     assert project_run_mode == base_settings.project_run_mode
     assert env_file_base_name == base_settings.env_file_base_name
     assert env_file_name == base_settings.env_file_name
+    assert env_file_dir == base_settings.env_file_dir
 
 
 def test_path_settings_class() -> None:

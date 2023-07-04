@@ -4,7 +4,7 @@ import zoneinfo
 from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import DateTime, TypeDecorator
-from sqlalchemy.ext.compiler import compiles  # type: ignore
+from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql import expression
 
 if TYPE_CHECKING:
@@ -52,6 +52,6 @@ class UTCDateTime(TypeDecorator[datetime.datetime]):
 
 
 @compiles(Utcnow, 'postgresql')
-def pg_utcnow(type_: Any, compiler: Any, **kwargs: Any):  # noqa
+def pg_utcnow(type_: Any, compiler: Any, **kwargs: Any) -> str:  # noqa
     """Маппинг класса Utcnow на функцию в postgresql."""
     return "TIMEZONE('utc', CURRENT_TIMESTAMP)"

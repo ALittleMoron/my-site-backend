@@ -13,6 +13,16 @@ TEST_ENV_1 = dict(
     APP_REDOC_URL='/redoc',
     APP_TITLE='FastAPI example application',
     APP_VERSION='0.0.0',
+    APP_SWAGGER_UI_OAUTH2_REDIRECT_URL='/docs/oauth2-redirect',
+    APP_SWAGGER_UI_SYNTAX_HIGHLIGHT='true',
+    APP_SWAGGER_UI_DEEP_LINKING='true',
+    APP_SWAGGER_UI_DOM_ID='#swagger-ui',
+    APP_SWAGGER_UI_LAYOUT='BaseLayout',
+    APP_SWAGGER_UI_SHOW_EXTENSIONS='true',
+    APP_SWAGGER_UI_SHOW_COMMON_EXTENSIONS='true',
+    APP_SWAGGER_UI_SYNTAX_HIGHLIGHT_THEME='obsidian',
+    APP_ROOT_PATH='',
+    APP_ROOT_PATH_IN_SERVERS='true',
 )
 TEST_ENV_2 = dict(
     APP_DEBUG='true',
@@ -22,6 +32,20 @@ TEST_ENV_2 = dict(
     APP_REDOC_URL='/redoc-changed',
     APP_TITLE='Changed title',
     APP_VERSION='1.1.1',
+    APP_SWAGGER_UI_OAUTH2_REDIRECT_URL='/docs/oauth2-redirect',
+    APP_SWAGGER_UI_SYNTAX_HIGHLIGHT='true',
+    APP_SWAGGER_UI_DEEP_LINKING='true',
+    APP_SWAGGER_UI_DOM_ID='#swagger-ui',
+    APP_SWAGGER_UI_LAYOUT='BaseLayout',
+    APP_SWAGGER_UI_SHOW_EXTENSIONS='true',
+    APP_SWAGGER_UI_SHOW_COMMON_EXTENSIONS='true',
+    APP_SWAGGER_UI_SYNTAX_HIGHLIGHT_THEME='obsidian',
+    APP_ROOT_PATH='',
+    APP_ROOT_PATH_IN_SERVERS='true',
+    APP_TERM_OF_SERVICE='https://example.com/term-of-service',
+    APP_CONTACT='{"name": "abc", "url": "http://abc.com", "email": "example@mail.ru"}',
+    APP_LICENSE='{"name": "Apache 2.0", "url": "http://abc.com"}',
+    APP_SERVERS='[{"url": "http://abc.com", "description": "abc"}]',
 )
 
 
@@ -37,7 +61,39 @@ def test_app_settings_contains(dict_env: dict[str, str]) -> None:
     assert settings.openapi_url == dict_env.get('APP_OPENAPI_URL')
     assert settings.redoc_url == dict_env.get('APP_REDOC_URL')
     assert settings.title == dict_env.get('APP_TITLE')
-    assert settings.version == dict_env.get('APP_VERSION')
+    assert settings.swagger_ui_oauth2_redirect_url == dict_env.get(
+        'APP_SWAGGER_UI_OAUTH2_REDIRECT_URL',
+    )
+    assert settings.swagger_ui_syntax_highlight == (
+        dict_env.get('APP_SWAGGER_UI_SYNTAX_HIGHLIGHT') == 'true'
+    )
+    assert settings.swagger_ui_deep_linking == (
+        dict_env.get('APP_SWAGGER_UI_DEEP_LINKING') == 'true'
+    )
+    assert settings.swagger_ui_dom_id == dict_env.get('APP_SWAGGER_UI_DOM_ID')
+    assert settings.swagger_ui_layout == dict_env.get('APP_SWAGGER_UI_LAYOUT')
+    assert settings.swagger_ui_show_extensions == (
+        dict_env.get('APP_SWAGGER_UI_SHOW_EXTENSIONS') == 'true'
+    )
+    assert settings.swagger_ui_show_common_extensions == (
+        dict_env.get(
+            'APP_SWAGGER_UI_SHOW_COMMON_EXTENSIONS',
+        )
+        == 'true'
+    )
+    assert settings.root_path == dict_env.get('APP_ROOT_PATH')
+    assert settings.root_path_in_servers == (dict_env.get('APP_ROOT_PATH_IN_SERVERS') == 'true')
+    assert settings.term_of_service == dict_env.get('APP_TERM_OF_SERVICE')
+    assert settings.contact == (
+        app_settings.Contact.parse_raw(dict_env['APP_CONTACT'])
+        if 'APP_CONTACT' in dict_env
+        else None
+    )
+    assert settings.license == (
+        app_settings.License.parse_raw(dict_env['APP_LICENSE'])
+        if 'APP_LICENSE' in dict_env
+        else None
+    )
 
 
 @pytest.mark.parametrize('dict_env', [TEST_ENV_1, TEST_ENV_2])
