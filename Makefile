@@ -64,7 +64,7 @@ clean:
 .PHONY: lint
 lint:
 	@if [ -z $(POETRY) ]; then echo "Poetry could not be found. See https://python-poetry.org/docs/"; exit 2; fi
-	$(POETRY) run mypy --config-file ./pyproject.toml $(NAME)
+	$(POETRY) run pyright $(NAME)
 	$(POETRY) run isort --settings-path ./pyproject.toml --check-only $(NAME)
 	$(POETRY) run black --config ./pyproject.toml --check $(NAME) --diff
 	$(POETRY) run ruff check $(NAME)
