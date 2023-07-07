@@ -4,8 +4,9 @@ from typing import Any
 from pydantic import BaseModel
 from sqlalchemy.orm import DeclarativeBase
 
-from app.core.config import logger
+from app.core.config import get_logger
 
+logger = get_logger('app')
 ATTR_NOT_FOUND_TEMPLATE = 'Атрибут "{field}" не был найден в модели {class_name}.'
 
 

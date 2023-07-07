@@ -2,7 +2,7 @@
 import enum
 from typing import TYPE_CHECKING, Any, TypeVar
 
-from app.db.queries import base as base_queries
+from app.db.queries.base import BaseQuery
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -43,6 +43,7 @@ class BaseRepository:
             сессия `sqlalchemy`.
         """
         self.session = session
+        self.base_queries = BaseQuery(session)
 
     async def _get_item(
         self: "BaseRepository",
@@ -85,8 +86,7 @@ class BaseRepository:
         if select_mode == SelectModeEnum.BRIEF:
             joins = None
             options = None
-        return await base_queries.get_db_item(
-            session=self.session,
+        return await self.base_queries.get_db_item(
             model=model,
             item_identity=item_identity,
             item_identity_field=item_identity_field,
@@ -141,8 +141,7 @@ class BaseRepository:
         if select_mode == SelectModeEnum.BRIEF:
             joins = None
             options = None
-        return await base_queries.get_db_item_list(
-            session=self.session,
+        return await self.base_queries.get_db_item_list(
             model=model,
             joins=joins,
             options=options,
@@ -153,3 +152,11 @@ class BaseRepository:
             limit=limit,
             offset=offset,
         )
+
+    async def _create_item(
+        self: 'BaseRepository',
+        *,
+        model: type['BaseSQLAlchemyModel'],
+    ) -> 'BaseSQLAlchemyModel':
+        """"""
+        return await self.base_queries

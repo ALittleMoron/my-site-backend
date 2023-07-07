@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "disable_existing_loggers": false,
+  "formatters": {
+    "main_formatter": {
+      "format": "%(asctime)s - %(name)s - %(levelname)s - %(message).400s - %(filename)s - %(lineno)s - %(funcName)s",
+      "datefmt": "%d.%m.%Y %H:%M:%S"
+    }
+  },
+  "handlers": {
+    "console": {
+      "level": "DEBUG",
+      "class": "logging.StreamHandler",
+      "formatter": "main_formatter"
+    },
+    "fileAppHandler": {
+      "level": "DEBUG",
+      "class": "logging.handlers.TimedRotatingFileHandler",
+      "filename": "{path}/app.log",
+      "when": "midnight",
+      "backupCount": 7,
+      "formatter": "main_formatter"
+    },
+    "fileSchedulerHandler": {
+      "level": "DEBUG",
+      "class": "logging.handlers.TimedRotatingFileHandler",
+      "filename": "{path}/apscheduler.log",
+      "when": "midnight",
+      "backupCount": 7,
+      "formatter": "main_formatter"
+    }
+  },
+  "loggers": {
+    "app": {
+      "handlers": ["console", "fileAppHandler"],
+      "level": "DEBUG"
+    },
+    "apscheduler": {
+      "handlers": ["console", "fileSchedulerHandler"],
+      "level": "DEBUG"
+    }
+  }
+}

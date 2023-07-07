@@ -4,12 +4,14 @@
 а также другие объекты, подходящие под критерии данного модуля (экземпляр класса для логирования,
 например).
 """
+import logging
+import logging.config
 from functools import lru_cache
 
 from app.core.settings.app import AppSettings
 from app.core.settings.base import PathSettings
 from app.core.settings.db import DatabaseSettings
-from app.core.settings.logger import logger  # noqa  # type: ignore
+from app.core.settings.logger import LoggerSettings
 
 
 @lru_cache
@@ -46,3 +48,35 @@ def get_database_settings() -> DatabaseSettings:
         настройки базы данных.
     """
     return DatabaseSettings()
+
+
+@lru_cache
+def get_logger_settings() -> LoggerSettings:
+    """Функция достает настройки логгера.
+
+    Returns
+    -------
+    LoggerSettings
+        настройки логгера.
+    """
+    return LoggerSettings()
+
+
+@lru_cache
+def get_logger(name: str) -> logging.Logger:
+    """Возвращает логгер по его имени.
+
+    Parameters
+    ----------
+    name : str
+        название логгера
+
+    Returns
+    -------
+    logging.Logger
+        экземпляр логгера.
+    """
+    logger_settings = get_logger_settings()
+
+    logging.config.dictConfig(logger_settings.format_settings())
+    return logging.getLogger(name)

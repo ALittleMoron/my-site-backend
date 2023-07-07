@@ -112,7 +112,7 @@ async def testing_app(
     """Фикстура-менеджер создания тестового клиента."""
     engine = create_async_engine(TEST_DATABASE_URL)
     async with engine.begin() as conn:
-        await conn.run_sync(tables.Base.metadata.create_all)
+        await conn.run_sync(tables.Base.metadata.create_all)  # type: ignore
 
         app = get_application()
 
@@ -124,4 +124,4 @@ async def testing_app(
         app.dependency_overrides[app_get_session] = get_session
         client = TestClient(app)
         yield client
-        await conn.run_sync(tables.Base.metadata.drop_all)
+        await conn.run_sync(tables.Base.metadata.drop_all)  # type: ignore

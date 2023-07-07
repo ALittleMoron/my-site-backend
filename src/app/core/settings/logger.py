@@ -2,50 +2,79 @@
 
 ВНИМАНИЕ! Не импортируйте объект логирования отсюда! Воспользуйтесь импортом из конфига.
 """
-from enum import Enum
-from typing import Literal
+from typing import Any, TypeGuard
 
-from loguru import logger
+import orjson
+from pydantic import Field, validator
 
-from .base import PROJECT_ROOT_DIR
+from .base import LOGS_DIR, STATIC_DIR, ProjectBaseSettings
 
-LOGGER_FOLDER: Literal["logs"] = "logs"
-LOGGER_FILE_TEMPLATE = "{log_level}_{unique}.log"
-LOGGER_FILE_PATH_TEMPLATES: dict[int, str] = {}
-
-if not (_dir := (PROJECT_ROOT_DIR / LOGGER_FOLDER)).exists():
-    _dir.mkdir(exist_ok=True)
+DictStrAny = dict[str, Any]
+FILE_TEMPLATE: str = "{name}.log"
 
 
-class LogLevels(int, Enum):
-    """Log levels from logging module as enum class."""
-
-    DEBUG = 10
-    INFO = 20
-    WARNING = 30
-    ERROR = 40
+def is_dict_str_keys_only(value: dict[Any, Any]) -> TypeGuard[dict[str, Any]]:
+    """TypeGuard, проверяющий ключи в словаре: все ключи - строки."""
+    return all(isinstance(key, str) for key in value.keys())  # noqa: SIM118
 
 
-for log_dir_element in (PROJECT_ROOT_DIR / LOGGER_FOLDER).iterdir():
-    if log_dir_element.is_file() and log_dir_element.stat().st_size == 0:
-        log_dir_element.unlink(missing_ok=True)
+with (STATIC_DIR / 'default_logger_settings.json').open('r') as reader:
+    default_log_settings = reader.read()
 
 
-for log_level in LogLevels:
-    LOGGER_FILE_PATH_TEMPLATES.update(
-        {
-            log_level.value: (
-                template := (
-                    PROJECT_ROOT_DIR
-                    / LOGGER_FOLDER
-                    / LOGGER_FILE_TEMPLATE.format(
-                        log_level=log_level.name.upper(),
-                        unique="{time}",
-                    )
-                )
-                .absolute()
-                .as_posix()
-            ),
-        },
+class LoggerSettings(ProjectBaseSettings):
+    """Класс настроек для базы данных."""
+
+    settings: DictStrAny = Field(
+        default=default_log_settings,
+        description='все основные настройки логгера',
     )
-    logger.add(template, level=log_level.name, rotation="100 MB")
+    has_file_path_template: bool = Field(
+        default=True,
+        description='в настройках логгера имеется шаблон пути до файла?',
+    )
+    path_to_log_template_var_name: str = Field(
+        default='path',
+        description=(
+            'название переменной внутри ``filename``, по которой будет форматироваться полный путь '
+            'до файла логов'
+        ),
+    )
+
+    @validator('settings', pre=True)
+    @classmethod
+    def settings_to_dict(cls: 'type[LoggerSettings]', value: str | dict[str, Any]) -> DictStrAny:
+        """Валидатор, конвертирующий настройки логгера из строки в ."""
+        not_all_keys_are_str_msg = 'не все ключи в LOGGER_SETTINGS являются строками.'
+        if isinstance(value, dict) and is_dict_str_keys_only(value):
+            return value
+        elif isinstance(value, dict):
+            raise ValueError(not_all_keys_are_str_msg)
+        try:
+            result = orjson.loads(value)
+        except orjson.JSONDecodeError as exc:
+            msg = (
+                f'переменная окружения LOGGER_SETTINGS должна быть json-строкой. '
+                f'Переданное значение: {value} (тип: {type(value)})'
+            )
+            raise ValueError(msg) from exc
+        if isinstance(result, dict) and is_dict_str_keys_only(result):  # type: ignore
+            return result
+        raise ValueError(not_all_keys_are_str_msg)
+
+    def format_settings(self: 'LoggerSettings') -> DictStrAny:
+        """Форматирует переданные настройки."""
+        if not self.has_file_path_template:
+            return self.settings
+        for handler_data in self.settings.get('handlers', {}).values():
+            if 'filename' in handler_data:
+                filename: str = handler_data['filename']
+                handler_data['filename'] = filename.format(
+                    **{self.path_to_log_template_var_name: LOGS_DIR.as_posix()},
+                )
+        return self.settings
+
+    class Config:  # type: ignore
+        """config class for production settings."""
+
+        env_prefix = "LOGGER_"

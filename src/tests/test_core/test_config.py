@@ -16,6 +16,7 @@ if TYPE_CHECKING:
         config.get_application_settings,
         config.get_database_settings,
         config.get_path_settings,
+        config.get_logger_settings,
     ],
 )
 def test_config_lru(function_to_call: 'Callable[[], BaseSettings]') -> None:
@@ -37,3 +38,8 @@ def test_config_contains(
 ) -> None:
     """Проверка содержимого функций конфигураций."""
     assert function_to_call().dict() == settings_class().dict()
+
+
+def test_config_get_logger() -> None:
+    """Проверка возврата логгера."""
+    assert config.get_logger('app') is config.get_logger('app')

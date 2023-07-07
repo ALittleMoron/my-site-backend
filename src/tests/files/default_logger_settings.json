@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "disable_existing_loggers": false,
+  "handlers": {
+    "fileAppHandler": {
+      "level": "DEBUG",
+      "class": "logging.handlers.TimedRotatingFileHandler",
+      "filename": "{path}/abcd.log"
+    },
+    "fileSchedulerHandler": {
+      "level": "DEBUG",
+      "class": "logging.handlers.TimedRotatingFileHandler",
+      "filename": "{path}/abcd.log"
+    }
+  },
+  "loggers": {
+    "app": {
+      "handlers": ["fileAppHandler"],
+      "level": "DEBUG"
+    },
+    "apscheduler": {
+      "handlers": ["fileSchedulerHandler"],
+      "level": "DEBUG"
+    }
+  }
+}

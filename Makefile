@@ -30,7 +30,11 @@ help:
 .PHONY: run
 run:
 	@if [ -z $(POETRY) ]; then echo "Poetry could not be found. See https://python-poetry.org/docs/"; exit 2; fi
+	@if [ $(mode) = "dev" ]; then $(ENV_VARS_PREFIX) $(POETRY) run uvicorn --factory src.app.main:get_application --reload --reload-delay 1; exit 0; fi
+	@if [ $(mode) = "prod" ]; then $(ENV_VARS_PREFIX) $(POETRY) run uvicorn --factory src.app.main:get_application; exit 0; fi
+	@echo -e "\033[0;33mнеизвестный режим запуска: $(mode)\033[0m"
 	$(ENV_VARS_PREFIX) $(POETRY) run uvicorn --factory src.app.main:get_application --reload --reload-delay 1
+
 
 .PHONY: install
 install:
@@ -57,7 +61,6 @@ shell:
 
 .PHONY: clean
 clean:
-	# --InteractiveShellApp.exec_lines="print('Данная оболочка была запущена с пре-импортированными модулями таблицы (tables) и функцией сессии (get_session). Также в оболочке используется плагин автообновления, так что при изменении кода в проекте не нужно перезапускать оболочку.')"
 	find . -type d -name "__pycache__" | xargs rm -rf {};
 	rm -rf ./logs/*
 

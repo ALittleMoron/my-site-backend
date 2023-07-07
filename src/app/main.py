@@ -7,9 +7,11 @@ from fastapi import FastAPI
 sys.path.insert(0, pathlib.Path(__file__).absolute().parent.parent.as_posix())
 
 from app.api.v1.api import api_v1_router
-from app.core.config import get_application_settings
+from app.core.config import get_application_settings, get_logger
 from app.core.exceptions.handlers import verbose_http_exception_handler
 from app.core.exceptions.http.base import BaseVerboseHTTPException
+
+logger = get_logger('app')
 
 
 def get_application() -> FastAPI:
