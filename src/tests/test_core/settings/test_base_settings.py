@@ -1,7 +1,7 @@
 import os
 import pathlib
 
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from app.core.settings import base as base_settings
 from app.utils import env as env_utils
@@ -36,6 +36,7 @@ def test_path_settings_class() -> None:
     """Проверка работы класса настроек для путей."""
 
     class PathSettings(BaseSettings):
+        model_config = SettingsConfigDict(env_prefix='APP_PATH_DEFAULTS_')
         project_root_dir: pathlib.Path = PROJECT_ROOT_DIR
         static_dir: pathlib.Path = STATIC_DIR
         app_dir: pathlib.Path = APP_DIR
@@ -44,9 +45,6 @@ def test_path_settings_class() -> None:
         env_files_dir: pathlib.Path = env_files_dir
         scripts_dir: pathlib.Path = SCRIPTS_DIR
         logs_dir: pathlib.Path = LOGS_DIR
-
-        class Config:  # type: ignore
-            env_prefix = 'APP_PATH_DEFAULTS_'
 
     instance = base_settings.PathSettings()
     fake_instance = PathSettings()

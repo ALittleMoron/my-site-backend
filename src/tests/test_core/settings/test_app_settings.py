@@ -1,6 +1,5 @@
 import os
 
-import pydantic
 import pytest
 
 from app.core.settings import app as app_settings
@@ -83,14 +82,16 @@ def test_app_settings_contains(dict_env: dict[str, str]) -> None:
     )
     assert settings.root_path == dict_env.get('APP_ROOT_PATH')
     assert settings.root_path_in_servers == (dict_env.get('APP_ROOT_PATH_IN_SERVERS') == 'true')
-    assert settings.term_of_service == dict_env.get('APP_TERM_OF_SERVICE')
+    assert (str(settings.term_of_service) if settings.term_of_service else None) == dict_env.get(
+        'APP_TERM_OF_SERVICE',
+    )
     assert settings.contact == (
-        app_settings.Contact.parse_raw(dict_env['APP_CONTACT'])
+        app_settings.Contact.model_validate_json(dict_env['APP_CONTACT'])
         if 'APP_CONTACT' in dict_env
         else None
     )
     assert settings.license == (
-        app_settings.License.parse_raw(dict_env['APP_LICENSE'])
+        app_settings.License.model_validate_json(dict_env['APP_LICENSE'])
         if 'APP_LICENSE' in dict_env
         else None
     )
@@ -103,16 +104,10 @@ def test_app_settings_fastapi_kwargs(dict_env: dict[str, str]) -> None:
     settings = app_settings.AppSettings()
     fastapi_kwargs = settings.fastapi_kwargs
 
-    model = pydantic.create_model_from_typeddict(app_settings.FastAPIKwargs)  # type: ignore
-    try:
-        result = model.parse_obj(settings.fastapi_kwargs)
-    except pydantic.ValidationError:
-        pytest.fail(reason=f'settings.fastapi_kwargs вернул неожиданный ответ: {fastapi_kwargs}.')
-
-    assert result.debug == fastapi_kwargs['debug']  # type: ignore
-    assert result.docs_url == fastapi_kwargs['docs_url']  # type: ignore
-    assert result.openapi_prefix == fastapi_kwargs['openapi_prefix']  # type: ignore
-    assert result.openapi_url == fastapi_kwargs['openapi_url']  # type: ignore
-    assert result.redoc_url == fastapi_kwargs['redoc_url']  # type: ignore
-    assert result.title == fastapi_kwargs['title']  # type: ignore
-    assert result.version == fastapi_kwargs['version']  # type: ignore
+    assert settings.debug == fastapi_kwargs['debug']
+    assert settings.docs_url == fastapi_kwargs['docs_url']
+    assert settings.openapi_prefix == fastapi_kwargs['openapi_prefix']
+    assert settings.openapi_url == fastapi_kwargs['openapi_url']
+    assert settings.redoc_url == fastapi_kwargs['redoc_url']
+    assert settings.title == fastapi_kwargs['title']
+    assert settings.version == fastapi_kwargs['version']

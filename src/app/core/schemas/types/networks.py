@@ -1,12 +1,10 @@
 """Модуль дополнительных типов-валидаторов для pydantic-схем, связанных с сетью."""
-from pydantic import ConstrainedStr
+from typing import Annotated
+
+from annotated_types import MaxLen, MinLen
 
 from app.core.schemas.regexes import networks as network_regexes
+from app.core.schemas.types.base import Regex
 
-
-class Host(ConstrainedStr):
-    """Строка с ограничениями: хост."""
-
-    min_length = 4
-    max_length = 1000
-    regex = network_regexes.host_regex
+# Аннотированные типы
+Host = Annotated[str, MinLen(4), MaxLen(1000), Regex(network_regexes.host_regex)]

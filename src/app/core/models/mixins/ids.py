@@ -21,6 +21,7 @@ class UUIDMixin:
 
     id: Mapped[uuid.UUID] = mapped_column(  # noqa: A003
         UUID(as_uuid=True),
+        nullable=False,
         primary_key=True,
         default=uuid.uuid4,
     )

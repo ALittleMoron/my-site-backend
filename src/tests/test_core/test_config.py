@@ -1,13 +1,12 @@
 from typing import TYPE_CHECKING
 
 import pytest
-
 from app.core import config
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from pydantic import BaseSettings
+    from pydantic_settings import BaseSettings
 
 
 @pytest.mark.parametrize(
@@ -16,7 +15,6 @@ if TYPE_CHECKING:
         config.get_application_settings,
         config.get_database_settings,
         config.get_path_settings,
-        config.get_logger_settings,
     ],
 )
 def test_config_lru(function_to_call: 'Callable[[], BaseSettings]') -> None:
@@ -37,7 +35,7 @@ def test_config_contains(
     settings_class: 'type[BaseSettings]',
 ) -> None:
     """Проверка содержимого функций конфигураций."""
-    assert function_to_call().dict() == settings_class().dict()
+    assert function_to_call().model_dump() == settings_class().model_dump()
 
 
 def test_config_get_logger() -> None:

@@ -11,7 +11,7 @@ from functools import lru_cache
 from app.core.settings.app import AppSettings
 from app.core.settings.base import PathSettings
 from app.core.settings.db import DatabaseSettings
-from app.core.settings.logger import LoggerSettings
+from app.core.settings.logger import log_settings
 
 
 @lru_cache
@@ -51,18 +51,6 @@ def get_database_settings() -> DatabaseSettings:
 
 
 @lru_cache
-def get_logger_settings() -> LoggerSettings:
-    """Функция достает настройки логгера.
-
-    Returns
-    -------
-    LoggerSettings
-        настройки логгера.
-    """
-    return LoggerSettings()
-
-
-@lru_cache
 def get_logger(name: str) -> logging.Logger:
     """Возвращает логгер по его имени.
 
@@ -76,7 +64,5 @@ def get_logger(name: str) -> logging.Logger:
     logging.Logger
         экземпляр логгера.
     """
-    logger_settings = get_logger_settings()
-
-    logging.config.dictConfig(logger_settings.format_settings())
+    logging.config.dictConfig(log_settings)
     return logging.getLogger(name)

@@ -1,12 +1,9 @@
 """Модуль примесей времени для моделей проекта."""
-from typing import TYPE_CHECKING
+import datetime
 
-from sqlalchemy.orm import MappedColumn, mapped_column
+from sqlalchemy.orm import Mapped, MappedColumn, mapped_column
 
 from app.core.models.types.datetime import UTCDateTime, Utcnow
-
-if TYPE_CHECKING:
-    import datetime
 
 
 def get_column_created_at() -> MappedColumn[UTCDateTime]:
@@ -38,8 +35,8 @@ def get_column_updated_at() -> MappedColumn[UTCDateTime]:
 class TimeMixin:
     """Примесь, отвечающая за добавление в классы-модели поля времени создания и обновления."""
 
-    created_at = get_column_created_at()
-    updated_at = get_column_updated_at()
+    created_at: Mapped[datetime.datetime] = get_column_created_at()  # type: ignore
+    updated_at: Mapped[datetime.datetime] = get_column_updated_at()  # type: ignore
 
     @property
     def updated_at_date(self: 'TimeMixin') -> 'datetime.date':

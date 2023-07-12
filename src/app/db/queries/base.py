@@ -1,10 +1,9 @@
 import datetime
 import re
-from typing import TYPE_CHECKING, Any, Literal, TypeVar, overload
+from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
-from sqlalchemy import CursorResult, and_
+from sqlalchemy import CursorResult, and_, func, or_, select, update
 from sqlalchemy import exc as sqlalchemy_exc
-from sqlalchemy import func, or_, select, update
 
 from app.core.config import get_logger
 from app.utils import datetime as datetime_utils
@@ -14,21 +13,28 @@ if TYPE_CHECKING:
     from uuid import UUID
 
     from pydantic import BaseModel
-    from sqlalchemy import Join
     from sqlalchemy.ext.asyncio import AsyncSession
     from sqlalchemy.orm.attributes import InstrumentedAttribute
     from sqlalchemy.orm.strategy_options import _AbstractLoad  # type: ignore
     from sqlalchemy.sql.elements import ColumnElement
     from sqlalchemy.sql.functions import Function
+    from sqlalchemy.sql.selectable import Select
 
     from app.core.models.tables.base import Base
 
     BaseSQLAlchemyModel = TypeVar('BaseSQLAlchemyModel', bound=Base)
     BasePydanticModel = TypeVar('BasePydanticModel', bound=BaseModel)
+    T = TypeVar('T')
     Same = TypeVar('Same')
     Count = int
     Identity = str | int | UUID
     Deleted = bool
+    JoinKwargs = dict[str, Any]
+    Model = type[Base]
+    JoinClause = ColumnElement[bool]
+    ModelWithOnclause = tuple[Model, JoinClause]
+    CompleteModel = tuple[Model, JoinClause, JoinKwargs]
+    Join = Model | ModelWithOnclause | CompleteModel
 
 
 logger = get_logger('app')
@@ -39,6 +45,24 @@ class BaseQuery:
 
     def __init__(self: 'BaseQuery', session: 'AsyncSession') -> None:
         self.session = session
+
+    def _resolve_joins(
+        self: 'BaseQuery',
+        *,
+        stmt: 'Select[tuple[T]]',
+        joins: 'Sequence[Join]',
+    ) -> 'Select[tuple[T]]':
+        """Применяет полученные join'ы к нужному select'у."""
+        for join in joins:
+            if isinstance(join, tuple | list):
+                join_kwargs: dict[Any, Any] = dict()
+                right, clause, *kw_list = join
+                if len(kw_list) == 1:
+                    join_kwargs.update(kw_list[0])
+                stmt = stmt.join(right, clause, **join_kwargs)
+            else:
+                stmt = stmt.join(join)
+        return stmt
 
     def _make_disable_filters(  # noqa: C901
         self: 'BaseQuery',
@@ -145,9 +169,9 @@ class BaseQuery:
         model: type['BaseSQLAlchemyModel'],
         item_identity: 'Identity',
         item_identity_field: str = 'id',
-        joins: 'Sequence[Join]' | None = None,
-        options: 'Sequence[_AbstractLoad]' | None = None,
-    ) -> 'BaseSQLAlchemyModel' | None:
+        joins: 'Sequence[Join] | None' = None,
+        options: 'Sequence[_AbstractLoad] | None' = None,
+    ) -> 'BaseSQLAlchemyModel | None':
         """Получение записи из БД по id.
 
         Parameters
@@ -175,10 +199,10 @@ class BaseQuery:
             в модели ``model``.
         """
         stmt = select(model)
-        for join in joins or []:
-            stmt = stmt.join(join)
-        if options:
-            stmt = stmt.options(*options)
+        if joins:
+            stmt = self._resolve_joins(stmt=stmt, joins=joins)
+        for option in options or []:
+            stmt = stmt.options(option)
         _filter = self._get_item_identity_filter(
             model=model,
             item_identity=item_identity,
@@ -192,8 +216,8 @@ class BaseQuery:
         self: 'BaseQuery',
         *,
         model: type['BaseSQLAlchemyModel'],
-        joins: 'Sequence[Join]' | None = None,
-        filters: 'Sequence[ColumnElement[bool]]' | None = None,
+        joins: 'Sequence[Join] | None' = None,
+        filters: 'Sequence[ColumnElement[bool]] | None' = None,
     ) -> int:
         """Получение количество записей в БД.
 
@@ -212,8 +236,8 @@ class BaseQuery:
             Количество записей в базе данных по переданной сущности и доп. параметрам.
         """
         stmt = select(func.count()).select_from(model)
-        for join in joins or []:
-            stmt = stmt.join(join)
+        if joins:
+            stmt = self._resolve_joins(stmt=stmt, joins=joins)
         if filters:
             stmt = stmt.filter(*filters)
         result = await self.session.execute(stmt)
@@ -226,12 +250,12 @@ class BaseQuery:
         self: 'BaseQuery',
         *,
         model: type['BaseSQLAlchemyModel'],
-        joins: 'Sequence[Join]' | None = None,
-        options: 'Sequence[_AbstractLoad]' | None = None,
-        filters: 'Sequence[ColumnElement[bool]]' | None = None,
+        joins: 'Sequence[Join] | None' = None,
+        options: 'Sequence[_AbstractLoad] | None' = None,
+        filters: 'Sequence[ColumnElement[bool]] | None' = None,
         search: str | None = None,
-        search_by: 'Sequence[str | InstrumentedAttribute[Any] | Function[Any]]' | None = None,
-        order_by: 'Sequence[str | ColumnElement[Any] | InstrumentedAttribute[Any]]' | None = None,
+        search_by: 'Sequence[str | InstrumentedAttribute[Any] | Function[Any]] | None' = None,
+        order_by: 'Sequence[str | ColumnElement[Any] | InstrumentedAttribute[Any]] | None' = None,
         limit: int | None = None,
         offset: int | None = None,
     ) -> 'Sequence[BaseSQLAlchemyModel]':
@@ -270,10 +294,10 @@ class BaseQuery:
             stmt = stmt.where(self._make_search_filter(search, model, *search_by))
         if filters:
             stmt = stmt.where(*filters)
-        for join in joins or []:
-            stmt = stmt.join(join)
-        if options:
-            stmt = stmt.options(*options)
+        if joins:
+            stmt = self._resolve_joins(stmt=stmt, joins=joins)
+        for option in options or []:
+            stmt = stmt.options(option)
         if order_by is not None:
             stmt = stmt.order_by(*order_by)
         if isinstance(limit, int):
@@ -311,7 +335,7 @@ class BaseQuery:
         elif isinstance(data, dict):
             item = model(**data)
         else:
-            item = model(**data.dict())
+            item = model(**data.model_dump())
         self.session.add(item)
         if use_flush:
             await self.session.flush()
@@ -325,58 +349,28 @@ class BaseQuery:
         )
         return item
 
-    @overload
     async def change_db_item(
         self: 'BaseQuery',
         *,
         data: 'BaseModel | dict[str, Any]',
         item: 'BaseSQLAlchemyModel',
         set_none: bool = False,
-        patch: bool = False,
-        set_none_fields: 'Literal["*"] | Sequence[str]' = '*',
+        allowed_none_fields: 'Literal["*"] | Sequence[str]' = '*',
         use_flush: bool = False,
-        return_is_updated_flag: Literal[False] = False,
-    ) -> 'BaseSQLAlchemyModel':
-        ...
-
-    @overload
-    async def change_db_item(
-        self: 'BaseQuery',
-        *,
-        data: 'BaseModel | dict[str, Any]',
-        item: 'BaseSQLAlchemyModel',
-        set_none: bool = False,
-        patch: bool = False,
-        set_none_fields: 'Literal["*"] | Sequence[str]' = '*',
-        use_flush: bool = False,
-        return_is_updated_flag: Literal[True] = True,
-    ) -> 'BaseSQLAlchemyModel | tuple[bool, BaseSQLAlchemyModel]':
-        ...
-
-    async def change_db_item(
-        self: 'BaseQuery',
-        *,
-        data: 'BaseModel | dict[str, Any]',
-        item: 'BaseSQLAlchemyModel',
-        set_none: bool = False,
-        patch: bool = False,
-        set_none_fields: 'Literal["*"] | Sequence[str]' = '*',
-        use_flush: bool = False,
-        return_is_updated_flag: bool = False,
-    ) -> 'BaseSQLAlchemyModel | tuple[bool, BaseSQLAlchemyModel]':
+    ) -> 'tuple[bool, BaseSQLAlchemyModel]':
         """Изменение записи из БД.
 
         Parameters
         ----------
-        model
-            модель данных sqlalchemy.
         data
-            данные для создания экземпляра модели.
+            данные для обновления экземпляра модели.
+        item
+            экземпляр модели.
+        set_none
+            флаг, указывающий то, нужно ли устанавливать None в значение.
+        allowed_none_fields
         use_flush
             использовать ли ``.flush()`` у сессии вместо ``.commit()``? По умолчанию False.
-        return_is_updated_flag
-            возвращать ли результат с флагом обновления данных? По умолчанию False. Флаг говорит,
-            были ли изменены данные у текущего `item``'а или нет.
 
         Returns
         -------
@@ -386,19 +380,14 @@ class BaseQuery:
             флаг обновления сущности и обновленная сущность (экземпляр модели).
         """
         is_updated = False
-        if isinstance(data, dict):
-            params = data
-        elif patch:
-            params = data.dict(exclude_unset=True)
-        else:
-            params = data.dict()
+        params = data if isinstance(data, dict) else data.model_dump()
+        if not set_none:
+            params = {key: value for key, value in params.items() if value is not None}
         for field, value in params.items():
-            if not set_none and value is None:
-                continue
             if (
                 set_none
                 and value is None
-                and (set_none_fields != '*' and field not in set_none_fields)
+                and (allowed_none_fields != '*' and field not in allowed_none_fields)
             ):
                 continue
             if not is_updated and getattr(item, field, None) != value:
@@ -411,13 +400,11 @@ class BaseQuery:
         logger.debug(
             (
                 'Обновление строки БД: успешное обновление. Экземпляр: %r. Параметры: %s, '
-                'set_none: %s, patch: %s, use_flush: %s.'
+                'set_none: %s, use_flush: %s.'
             ),
-            *(item, params, set_none, patch, use_flush),
+            *(item, params, set_none, use_flush),
         )
-        if return_is_updated_flag:
-            return is_updated, item
-        return item
+        return is_updated, item
 
     async def delete_db_item(
         self: 'BaseQuery',
@@ -463,7 +450,7 @@ class BaseQuery:
         field_type: type[datetime.datetime] | type[bool] = datetime.datetime,
         allow_filter_by_value: bool = True,
         extra_filters: 'Sequence[ColumnElement[bool]] | None' = None,
-    ) -> Count:
+    ) -> 'Count':
         """Отключает записи в базе данных (устанавливают нужное значение выбранному полю).
 
         Parameters

@@ -33,17 +33,17 @@ class WatchListElementBase(Base, TimeMixin, UUIDMixin):
         nullable=False,
         doc='Название на языке оригинала',
     )
-    description: Mapped[str] = mapped_column(
+    description: Mapped[str | None] = mapped_column(
         String,
         nullable=True,
         doc='Описание',
     )
-    my_opinion: Mapped[str] = mapped_column(
+    my_opinion: Mapped[str | None] = mapped_column(
         String,
         nullable=True,
         doc='Моё мнение',
     )
-    score: Mapped[int] = mapped_column(
+    score: Mapped[int | None] = mapped_column(
         SmallInteger,
         nullable=True,
         doc='Оценка',

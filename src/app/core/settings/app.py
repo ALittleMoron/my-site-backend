@@ -5,6 +5,7 @@ from typing import Any, TypedDict
 
 from fastapi.openapi.models import Contact, License, Server
 from pydantic import AnyHttpUrl, Field
+from pydantic_settings import SettingsConfigDict
 
 from app.core.settings.base import APP_DIR, ProjectBaseSettings
 
@@ -47,6 +48,8 @@ class FastAPISwaggerUIParameters(TypedDict):
 
 class AppSettings(ProjectBaseSettings):
     """Класс настроек для экземпляра класса FastAPI."""
+
+    model_config = SettingsConfigDict(env_prefix='APP_')
 
     debug: bool = Field(
         default=False,
@@ -167,13 +170,8 @@ class AppSettings(ProjectBaseSettings):
             'version': self.version,
             'root_path': self.root_path,
             'root_path_in_servers': self.root_path_in_servers,
-            'term_of_service': self.term_of_service,
-            'contact': self.contact.dict() if self.contact else None,
-            'license_info': self.license.dict() if self.license else None,
-            'servers': [server.dict() for server in self.servers] if self.servers else None,
+            'term_of_service': str(self.term_of_service) if self.term_of_service else None,
+            'contact': self.contact.model_dump() if self.contact else None,
+            'license_info': self.license.model_dump() if self.license else None,
+            'servers': [server.model_dump() for server in self.servers] if self.servers else None,
         }
-
-    class Config:  # type: ignore
-        """Класс-конфиг для приложения."""
-
-        env_prefix = 'APP_'
