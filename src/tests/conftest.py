@@ -1,16 +1,14 @@
 import asyncio
 import contextlib
+import uuid
 from asyncio import AbstractEventLoop, current_task
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, Any, Protocol, TypeVar
 
 import asyncpg
 import pytest
 import pytest_asyncio
-from app.api.v1.dependencies.databases import get_session as app_get_session
-from app.core.config import get_database_settings, get_logger
-from app.core.models import tables
-from app.main import get_application
 from fastapi.testclient import TestClient
+from mimesis import Locale, Text
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_scoped_session,
@@ -18,12 +16,48 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
+from app.api.v1.dependencies.databases import get_session as app_get_session
+from app.core.config import get_database_settings, get_logger
+from app.core.models import tables
+from app.core.models.tables.tests import TestBaseModel, TestRelatedModel
+from app.main import get_application
+from tests.utils.database import db_create_item
+
 if TYPE_CHECKING:
-    from collections.abc import AsyncGenerator, Generator
+    from collections.abc import AsyncGenerator, Awaitable, Generator
 
     from sqlalchemy.ext.asyncio import AsyncEngine
 
     BaseSQLAlchemyModel = TypeVar('BaseSQLAlchemyModel', bound=tables.Base)
+
+    class TestBaseModelFactoryProtocol(Protocol):  # noqa
+        def __call__(self, **kwargs: Any) -> 'Awaitable[TestBaseModel]':  # noqa
+            ...
+
+    class TestBaseModelListFactoryProtocol(Protocol):  # noqa
+        def __call__(  # noqa
+            self,  # noqa
+            count: int = 1,
+            **kwargs: Any,  # noqa
+        ) -> 'Awaitable[list[TestBaseModel]]':
+            ...
+
+    class TestRelatedModelFactoryProtocol(Protocol):  # noqa
+        def __call__(  # noqa
+            self,  # noqa
+            test_base_model_id: uuid.UUID | None = None,
+            **kwargs: Any,  # noqa
+        ) -> 'Awaitable[TestRelatedModel]':
+            ...
+
+    class TestRelatedModelListFactoryProtocol(Protocol):  # noqa
+        def __call__(  # noqa
+            self,  # noqa
+            count: int = 1,
+            test_base_model_id: uuid.UUID | None = None,
+            **kwargs: Any,  # noqa
+        ) -> 'Awaitable[list[TestRelatedModel]]':
+            ...
 
 
 logger = get_logger('tests')
@@ -128,3 +162,76 @@ async def testing_app(
     yield client
     async with db_engine.begin() as conn:
         await conn.run_sync(tables.Base.metadata.drop_all)
+
+
+@pytest.fixture()
+def test_base_model_factory(
+    db_session_factory: 'async_sessionmaker[AsyncSession]',
+) -> 'TestBaseModelFactoryProtocol':
+    """Фабрика создания тестового экземпляра модели."""
+
+    async def create_item(**kwargs: Any) -> 'TestBaseModel':  # noqa: ANN401
+        text_provider = Text(locale=Locale.RU)
+        params = dict(text=text_provider.text(quantity=3))
+        params.update(kwargs)
+        item = await db_create_item(db_session_factory, TestBaseModel, params)
+        return item
+
+    return create_item
+
+
+@pytest.fixture()
+def test_base_model_list_factory(
+    test_base_model_factory: 'TestBaseModelFactoryProtocol',
+) -> 'TestBaseModelListFactoryProtocol':
+    """Фабрика создания тестового списка экземпляров модели."""
+
+    async def create_item(count: int = 1, **kwargs: Any) -> 'list[TestBaseModel]':  # noqa: ANN401
+        return [await test_base_model_factory(**kwargs) for _ in range(count)]
+
+    return create_item
+
+
+@pytest.fixture()
+def test_related_model_factory(
+    db_session_factory: 'async_sessionmaker[AsyncSession]',
+    test_base_model_factory: 'TestBaseModelFactoryProtocol',
+) -> 'TestRelatedModelFactoryProtocol':
+    """Фабрика создания тестового экземпляра модели со связью."""
+
+    async def create_item(
+        test_base_model_id: uuid.UUID | None = None,
+        **kwargs: Any,  # noqa: ANN401
+    ) -> 'TestRelatedModel':
+        text_provider = Text(locale=Locale.RU)
+        if not test_base_model_id:
+            test_base_model = await test_base_model_factory()
+            test_base_model_id = test_base_model.id
+        params = dict(
+            test_base_model_id=test_base_model_id,
+            text=text_provider.text(quantity=3),
+        )
+        params.update(kwargs)
+        item = await db_create_item(db_session_factory, TestRelatedModel, params)
+        return item
+
+    return create_item
+
+
+@pytest.fixture()
+def test_related_model_list_factory(
+    test_base_model_factory: 'TestRelatedModelFactoryProtocol',
+) -> 'TestRelatedModelListFactoryProtocol':
+    """Фабрика создания тестового списка экземпляров модели."""
+
+    async def create_item(
+        count: int = 1,
+        test_base_model_id: uuid.UUID | None = None,
+        **kwargs: Any,  # noqa: ANN401
+    ) -> 'list[TestRelatedModel]':
+        return [
+            await test_base_model_factory(test_base_model_id=test_base_model_id, **kwargs)
+            for _ in range(count)
+        ]
+
+    return create_item

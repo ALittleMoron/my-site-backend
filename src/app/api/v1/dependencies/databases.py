@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
     from app.db.repositories.base import BaseRepository
 
-    Repo = TypeVar('Repo', bound=BaseRepository)
+    Repo = TypeVar('Repo', bound=BaseRepository)  # type: ignore
 
 
 async def get_session() -> 'AsyncGenerator[AsyncSession, None]':

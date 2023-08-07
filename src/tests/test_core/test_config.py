@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
 import pytest
+
 from app.core import config
 
 if TYPE_CHECKING:
@@ -14,6 +15,8 @@ if TYPE_CHECKING:
     [
         config.get_application_settings,
         config.get_database_settings,
+        config.get_admin_settings,
+        config.get_auth_settings,
         config.get_path_settings,
     ],
 )
@@ -27,6 +30,8 @@ def test_config_lru(function_to_call: 'Callable[[], BaseSettings]') -> None:
     [
         (config.get_application_settings, config.AppSettings),
         (config.get_database_settings, config.DatabaseSettings),
+        (config.get_admin_settings, config.AdminSettings),
+        (config.get_auth_settings, config.AuthSettings),
         (config.get_path_settings, config.PathSettings),
     ],
 )

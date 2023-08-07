@@ -1,5 +1,6 @@
 import datetime
 import uuid
+from typing import Literal, Self
 
 from sqlalchemy import UUID, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -10,7 +11,7 @@ from app.core.models.tables import Base
 from app.core.models.types.datetime import UTCDateTime
 
 
-class TestBaseModel(Base, UUIDMixin, TimeMixin):
+class TestBaseModel(UUIDMixin, TimeMixin, Base):
     """Тестовая модель для проверки работы абстрактных данных в вакууме.
 
     Гарантирует, что базовые методы работы с моделями будут работать всегда так, как нужно.
@@ -27,8 +28,12 @@ class TestBaseModel(Base, UUIDMixin, TimeMixin):
         lazy='selectin',
     )
 
+    def some_callable(self: Self) -> Literal['abc']:
+        """тестовый метод."""
+        return 'abc'
 
-class TestRelatedModel(Base, UUIDMixin, TimeMixin):
+
+class TestRelatedModel(UUIDMixin, TimeMixin, Base):
     """Тестовая модель для работы отношений между моделями."""
 
     __test__ = False  # pytest collect skip
@@ -46,3 +51,7 @@ class TestRelatedModel(Base, UUIDMixin, TimeMixin):
         back_populates='test_related_models',
         lazy='selectin',
     )
+
+    def some_callable(self: Self) -> Literal['abc']:
+        """тестовый метод."""
+        return 'abc'

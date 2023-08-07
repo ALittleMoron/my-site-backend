@@ -1,7 +1,35 @@
 [tool.ruff]
 select = [
-    "A", "B", "D", "E", "F", "G", "N", "Q", "S", "C90", "UP", "ANN", "ASYNC", "FBT", "COM", "COM",
-    "DTZ", "DJ", "EM", "ICN", "PIE", "T20", "PYI", "PT", "SIM", "TCH", "INT", "PTH", "ERA", "TRY"
+    "A",
+    "B",
+    "D",
+    "E",
+    "F",
+    "G",
+    "N",
+    "Q",
+    "S",
+    "C90",
+    "UP",
+    "ANN",
+    "ASYNC",
+    "FBT",
+    "COM",
+    "COM",
+    "DTZ",
+    "DJ",
+    "EM",
+    "ICN",
+    "PIE",
+    "T20",
+    "PYI",
+    "PT",
+    "SIM",
+    "TCH",
+    "INT",
+    "PTH",
+    "ERA",
+    "TRY",
 ]
 line-length = 100
 show-source = true
@@ -17,24 +45,11 @@ exclude = [
     "alembic",
     "airich",
 ]
-ignore = [
-    "D100",
-    "B008",
-    "D104",
-    "Q000",
-    "S101",
-    "PT016",
-]
+ignore = ["D100", "B008", "D104", "Q000", "S101", "PT016"]
 
 [tool.ruff.pydocstyle]
 convention = "numpy"
 ignore-decorators = ["typing.overload"]
-
-[tools.ruff.isort]
-include_trailing_comma = true
-use_parentheses = true
-multi_line_output = 3
-line_length = 100
 
 [tool.ruff.mccabe]
 max-complexity = 11
@@ -46,6 +61,9 @@ extend-immutable-calls = ["fastapi.Depends", "fastapi.Query"]
 "__init__.py" = ["F401"]
 "*/migrations/versions/*" = ["D103"]
 "src/app/main.py" = ["E402"]
+"src/cli/commands/*" = ["E402", "ANN201"]
+"src/cli/__init__.py" = ["E402", "ANN201", "FBT001", "FBT002", "UP007"]
+"manage.py" = ["E402"]
 
 
 [tool.black]
@@ -81,8 +99,12 @@ omit = ['']
 
 [tool.coverage.report]
 exclude_lines = [
-    "# noqa",
-    "raise NotImplementedError"
+    "enum.Enum",
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "if typing.TYPE_CHECKING:",
+    "@overload",
 ]
 
 [tool.pytest]
@@ -105,9 +127,9 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
-fastapi = {extras = ["all"], version = "^0.100.0"}
+fastapi = { extras = ["all"], version = "^0.100.0" }
 pre-commit = "^2.21.0"
-sqlalchemy = {extras = ["asyncio"], version = "^2.0.13"}
+sqlalchemy = { extras = ["asyncio"], version = "^2.0.13" }
 alembic = "^1.10.4"
 asyncpg = "^0.27.0"
 python-dateutil = "^2.8.2"
@@ -118,11 +140,15 @@ passlib = "^1.7.4"
 httpx = "^0.24.1"
 orjson = "^3.9.1"
 pydantic-settings = "^2.0.1"
+sqladmin = "^0.14.0"
+itsdangerous = "^2.1.2"
+pyjwt = "^2.8.0"
+typer = "^0.9.0"
 
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.2.0"
-coverage = {extras = ["toml"], version = "^7.0.3"}
+coverage = { extras = ["toml"], version = "^7.0.3" }
 black = "^22.12.0"
 bandit = "^1.7.5"
 pytest-cov = "^4.1.0"
@@ -137,12 +163,13 @@ pytest-asyncio = "^0.21.0"
 pytest-async-sqlalchemy = "^0.2.0"
 pytz = "^2023.3"
 asyncpg-stubs = "^0.27.0"
+pytest-mock = "^3.11.1"
+types-pyjwt = "^1.7.1"
 
 
 [tool.poetry.group.local-tools.dependencies]
 pyment = "^0.3.3"
 ipython = "^8.14.0"
-
 
 [build-system]
 requires = ["poetry-core"]

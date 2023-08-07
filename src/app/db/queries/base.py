@@ -2,8 +2,9 @@ import datetime
 import re
 from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
-from sqlalchemy import CursorResult, and_, func, or_, select, update
+from sqlalchemy import CursorResult, and_
 from sqlalchemy import exc as sqlalchemy_exc
+from sqlalchemy import func, or_, select, update
 
 from app.core.config import get_logger
 from app.utils import datetime as datetime_utils
@@ -169,6 +170,7 @@ class BaseQuery:
         model: type['BaseSQLAlchemyModel'],
         item_identity: 'Identity',
         item_identity_field: str = 'id',
+        filters: 'Sequence[ColumnElement[bool]] | None' = None,
         joins: 'Sequence[Join] | None' = None,
         options: 'Sequence[_AbstractLoad] | None' = None,
     ) -> 'BaseSQLAlchemyModel | None':
@@ -182,6 +184,8 @@ class BaseQuery:
             идентификатор для фильтрации.
         item_identity_field
             название поля для фильтрации (Default: ``'id'``).
+        filters
+            фильтры запроса (Default: ``None``).
         joins
             sql-join'ы (Default: ``None``).
         options
@@ -208,6 +212,8 @@ class BaseQuery:
             item_identity=item_identity,
             item_identity_field=item_identity_field,
         )
+        if filters:
+            stmt = stmt.where(*filters)
         stmt = stmt.where(_filter)
         result = await self.session.execute(stmt)
         return result.scalars().first()
@@ -292,12 +298,12 @@ class BaseQuery:
             search = re.escape(search)
             search = search.translate(str.maketrans({'%': r'\%', '_': r'\_', '/': r'\/'}))
             stmt = stmt.where(self._make_search_filter(search, model, *search_by))
-        if filters:
-            stmt = stmt.where(*filters)
         if joins:
             stmt = self._resolve_joins(stmt=stmt, joins=joins)
         for option in options or []:
             stmt = stmt.options(option)
+        if filters:
+            stmt = stmt.where(*filters)
         if order_by is not None:
             stmt = stmt.order_by(*order_by)
         if isinstance(limit, int):
@@ -450,6 +456,7 @@ class BaseQuery:
         field_type: type[datetime.datetime] | type[bool] = datetime.datetime,
         allow_filter_by_value: bool = True,
         extra_filters: 'Sequence[ColumnElement[bool]] | None' = None,
+        use_flush: bool = False,
     ) -> 'Count':
         """Отключает записи в базе данных (устанавливают нужное значение выбранному полю).
 
@@ -470,22 +477,31 @@ class BaseQuery:
             разрешить фильтрацию по полю disable_field.
         extra_filters
             дополнительные фильтры.
+        use_flush
+            использовать ли ``.flush()`` у сессии вместо ``.commit()``? По умолчанию False.
 
         Returns
         -------
         int
             количество "отключенных" записей.
+
+        Raises
+        ------
+        TypeError
+            в случае, если был передан невалидный field_type.
+        AttributeError
+            в случае ошибки создания фильтров для отключения.
         """
-        if field_type == bool:
+        if issubclass(field_type, bool):
             field_value = True
-        elif field_type == datetime.datetime:
+        elif issubclass(field_type, datetime.datetime):  # type: ignore
             field_value = datetime_utils.get_utc_now()
         else:
             msg = (
                 f'Параметр "field_type" должен быть одним из следующих: bool, datetime. '
                 f'Был передан {field_type}.'
             )
-            raise ValueError(msg)
+            raise TypeError(msg)
         if not ids_to_disable:
             return 0
         try:
@@ -513,6 +529,10 @@ class BaseQuery:
             return 0
         stmt = update(model).where(*filters).values({disable_field: field_value})
         result = await self.session.execute(stmt)
+        if use_flush:
+            await self.session.flush()
+        else:
+            await self.session.commit()
         # только в CursorResult есть атрибут rowcount
         if isinstance(result, CursorResult):
             return result.rowcount

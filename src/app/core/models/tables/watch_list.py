@@ -12,7 +12,7 @@ WATCH_LIST_ELEMENT_NAME_LENGTH = 255
 WATCH_LIST_ELEMENT_NATIVE_NAME_LENGTH = 255
 
 
-class WatchListElementBase(Base, TimeMixin, UUIDMixin):
+class WatchListElementBase(TimeMixin, UUIDMixin, Base):
     """Базовый класс элемента списка просмотренного."""
 
     __abstract__ = True
@@ -25,12 +25,12 @@ class WatchListElementBase(Base, TimeMixin, UUIDMixin):
 
     name: Mapped[str] = mapped_column(
         String(WATCH_LIST_ELEMENT_NAME_LENGTH),
-        nullable=False,
+        nullable=True,
         doc='Название',
     )
     native_name: Mapped[str] = mapped_column(
         String(WATCH_LIST_ELEMENT_NAME_LENGTH),
-        nullable=False,
+        nullable=True,
         doc='Название на языке оригинала',
     )
     description: Mapped[str | None] = mapped_column(

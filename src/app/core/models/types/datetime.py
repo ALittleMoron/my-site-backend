@@ -23,7 +23,7 @@ class Utcnow(expression.FunctionElement):  # type: ignore
 class UTCDateTime(TypeDecorator[datetime.datetime]):
     """Класс-декоратор для DateTime для автоматической подстановки tzinfo=UTC."""
 
-    impl = DateTime
+    impl = DateTime(timezone=True)
     cache_ok = True
 
     def process_result_value(
@@ -35,9 +35,9 @@ class UTCDateTime(TypeDecorator[datetime.datetime]):
 
         Добавляет tzinfo=UTC в дату и время значения.
         """
-        if value is not None:
+        if isinstance(value, datetime.datetime) and value.tzinfo is None:
             return value.replace(tzinfo=UTC)
-        return None
+        return value
 
     def process_bind_param(
         self: 'UTCDateTime',
@@ -48,6 +48,8 @@ class UTCDateTime(TypeDecorator[datetime.datetime]):
 
         Ничего не делает, потому что SqlAlchemy автоматически переводит значение в UTC.
         """
+        if isinstance(value, datetime.datetime) and value.tzinfo is None:
+            return value.replace(tzinfo=UTC)
         return value
 
 

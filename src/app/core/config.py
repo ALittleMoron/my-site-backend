@@ -8,7 +8,9 @@ import logging
 import logging.config
 from functools import lru_cache
 
+from app.core.settings.admin import AdminSettings
 from app.core.settings.app import AppSettings
+from app.core.settings.auth import AuthSettings
 from app.core.settings.base import PathSettings
 from app.core.settings.db import DatabaseSettings
 from app.core.settings.logger import log_settings
@@ -48,6 +50,30 @@ def get_database_settings() -> DatabaseSettings:
         настройки базы данных.
     """
     return DatabaseSettings()
+
+
+@lru_cache
+def get_admin_settings() -> AdminSettings:
+    """Функция достает настройки админ-панели.
+
+    Returns
+    -------
+    AdminSettings
+        настройки админ-панели.
+    """
+    return AdminSettings()
+
+
+@lru_cache
+def get_auth_settings() -> AuthSettings:
+    """Функция достает настройки системы аутентификации.
+
+    Returns
+    -------
+    AuthSettings
+        настройки системы аутентификации.
+    """
+    return AuthSettings()
 
 
 @lru_cache

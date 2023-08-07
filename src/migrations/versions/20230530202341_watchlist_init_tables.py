@@ -78,8 +78,8 @@ def upgrade() -> None:
             server_default='NOT_SET',
             nullable=False,
         ),
-        sa.Column('name', sa.String(length=255), nullable=False),
-        sa.Column('native_name', sa.String(length=255), nullable=False),
+        sa.Column('name', sa.String(length=255), nullable=True),
+        sa.Column('native_name', sa.String(length=255), nullable=True),
         sa.Column('description', sa.String(), nullable=True),
         sa.Column('my_opinion', sa.String(), nullable=True),
         sa.Column('score', sa.SmallInteger(), nullable=True),
@@ -94,13 +94,13 @@ def upgrade() -> None:
             'created_at',
             dt_custom_types.UTCDateTime(),
             server_default=sa.text("TIMEZONE('utc', CURRENT_TIMESTAMP)"),
-            nullable=True,
+            nullable=False,
         ),
         sa.Column(  # type: ignore
             'updated_at',
             dt_custom_types.UTCDateTime(),
             server_default=sa.text("TIMEZONE('utc', CURRENT_TIMESTAMP)"),
-            nullable=True,
+            nullable=False,
         ),
         sa.Column('id', sa.UUID(), nullable=False),
         sa.CheckConstraint('score <= 100'),
@@ -116,8 +116,8 @@ def upgrade() -> None:
             server_default='NOT_SET',
             nullable=False,
         ),
-        sa.Column('name', sa.String(length=255), nullable=False),
-        sa.Column('native_name', sa.String(length=255), nullable=False),
+        sa.Column('name', sa.String(length=255), nullable=True),
+        sa.Column('native_name', sa.String(length=255), nullable=True),
         sa.Column('description', sa.String(), nullable=True),
         sa.Column('my_opinion', sa.String(), nullable=True),
         sa.Column('score', sa.SmallInteger(), nullable=True),
@@ -132,13 +132,13 @@ def upgrade() -> None:
             'created_at',
             dt_custom_types.UTCDateTime(),
             server_default=sa.text("TIMEZONE('utc', CURRENT_TIMESTAMP)"),
-            nullable=True,
+            nullable=False,
         ),
         sa.Column(  # type: ignore
             'updated_at',
             dt_custom_types.UTCDateTime(),
             server_default=sa.text("TIMEZONE('utc', CURRENT_TIMESTAMP)"),
-            nullable=True,
+            nullable=False,
         ),
         sa.Column('id', sa.UUID(), nullable=False),
         sa.CheckConstraint('score <= 100'),
@@ -146,8 +146,6 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint('id'),
         sa.UniqueConstraint('id'),
     )
-    op.create_unique_constraint('anime_id_key', 'anime', ['id'])
-    op.create_unique_constraint('kinopoisk_id_key', 'kinopoisk', ['id'])
 
     for table_name in UPDATED_TABLES:
         op.execute(
@@ -164,8 +162,6 @@ def downgrade() -> None:
     for table_name in UPDATED_TABLES:
         op.execute(f"DROP TRIGGER refresh_updated_at_{table_name} ON {table_name}")
 
-    op.drop_constraint('kinopoisk_id_key', 'kinopoisk', type_='unique')
-    op.drop_constraint('anime_id_key', 'anime', type_='unique')
     op.drop_table('kinopoisk')
     op.drop_table('anime')
 

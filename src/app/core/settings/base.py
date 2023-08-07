@@ -9,6 +9,8 @@ from app.utils import env as env_utils
 APP_DIR: pathlib.Path = pathlib.Path(__file__).parent.parent.parent.absolute()
 SRC_DIR: pathlib.Path = APP_DIR.parent
 TESTS_DIR = SRC_DIR / 'tests'
+MIGRATIONS_DIR = SRC_DIR / 'migrations'
+CLI_DIR = SRC_DIR / 'cli'
 PROJECT_ROOT_DIR: pathlib.Path = SRC_DIR.parent
 STATIC_DIR = PROJECT_ROOT_DIR / 'static'
 SCRIPTS_DIR = PROJECT_ROOT_DIR / 'scripts'
@@ -43,6 +45,8 @@ class PathSettings(ProjectBaseSettings):
     app_dir: pathlib.Path = APP_DIR
     src_dir: pathlib.Path = SRC_DIR
     tests_dir: pathlib.Path = TESTS_DIR
+    migrations_dir: pathlib.Path = MIGRATIONS_DIR
+    cli_dir: pathlib.Path = CLI_DIR
     env_files_dir: pathlib.Path = env_files_dir
     scripts_dir: pathlib.Path = SCRIPTS_DIR
     logs_dir: pathlib.Path = LOGS_DIR
